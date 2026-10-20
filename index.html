@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>검전기 가상 실험실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAF2F6; --surface:#FFFFFF; --surface-2:#F3F8FA; --ink:#1B2A35; --muted:#5A6B78; --line:#D4E1E8;
+  --teal:#16798A; --teal-ink:#0F5D6B; --teal-soft:#DDF0F3;
+  --neg:#2463D9; --neg-soft:#E4ECFC; --pos:#D9402F; --pos-soft:#FCE7E3;
+  --go:#2C9A57;
+  --glass-fill:rgba(196,220,232,.22); --glass-stroke:#9AB3C1; --metal:#4A555D; --plate-side:#4E585F; --plate-top:#8A949B;
+  --tray:#D9E5EB; --label:#7C8D99;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1920; --surface:#16252F; --surface-2:#1C2E3A; --ink:#E6EEF2; --muted:#9DB0BC; --line:#2A3F4D;
+    --teal:#2FA5B7; --teal-ink:#8ADBE6; --teal-soft:#173E46;
+    --neg:#6FA0FF; --neg-soft:#1B2C4D; --pos:#FF7B6B; --pos-soft:#46231F; --go:#4CC57D;
+    --glass-fill:rgba(160,200,220,.07); --glass-stroke:#5C7B8B; --metal:#A8B3BA; --plate-side:#6F7A82; --plate-top:#A7B2B9;
+    --tray:#22343F; --label:#8197A4;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1920; --surface:#16252F; --surface-2:#1C2E3A; --ink:#E6EEF2; --muted:#9DB0BC; --line:#2A3F4D;
+  --teal:#2FA5B7; --teal-ink:#8ADBE6; --teal-soft:#173E46;
+  --neg:#6FA0FF; --neg-soft:#1B2C4D; --pos:#FF7B6B; --pos-soft:#46231F; --go:#4CC57D;
+  --glass-fill:rgba(160,200,220,.07); --glass-stroke:#5C7B8B; --metal:#A8B3BA; --plate-side:#6F7A82; --plate-top:#A7B2B9;
+  --tray:#22343F; --label:#8197A4;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:'Noto Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-size:17px;line-height:1.6;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;
+}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button:focus-visible,#stage:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+
+.app{height:100%;display:flex;flex-direction:column;max-width:1400px;margin:0 auto;padding:12px 16px 16px}
+.top{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding:2px 4px 12px}
+h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;line-height:1.2;margin:0;color:var(--teal-ink)}
+
+.main{flex:1;min-height:0;display:flex}
+.stage-wrap{flex:1;display:flex;flex-direction:column;background:var(--surface);border-radius:26px;border:1px solid var(--line);overflow:hidden;min-height:0}
+.stage-box{position:relative;flex:1;min-height:0}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+#stage.grabbing{cursor:grabbing}
+.pill{
+  min-height:44px;padding:6px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);
+  font-size:15px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px;
+}
+.pill[aria-pressed="true"]{border-color:var(--teal);color:var(--teal-ink);background:var(--teal-soft)}
+.pill .sw{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.pill[aria-pressed="true"] .sw{background:var(--teal)}
+#tgC{position:absolute;top:12px;right:12px}
+.hint{
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);pointer-events:none;
+  background:var(--teal);color:#fff;font-weight:700;font-size:15px;padding:8px 16px;border-radius:999px;white-space:nowrap;
+  transition:opacity .4s;
+}
+.hint.off{opacity:0}
+
+.controls{border-top:1px solid var(--line);padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.row{display:flex;align-items:center;gap:10px;width:100%;max-width:620px}
+.row > span{flex:none;width:52px;font-size:14px;font-weight:700;line-height:1.25;color:var(--muted)}
+.seg{flex:1;display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line)}
+.seg button{
+  flex:1;min-height:46px;border:0;border-radius:12px;background:transparent;font-weight:700;font-size:15px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 6px;white-space:nowrap;transition:background .15s,color .15s;
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 2px var(--teal) inset}
+.seg.dis{opacity:.4;pointer-events:none}
+.seg.num button{font-family:'Jua',sans-serif;font-size:20px}
+.seg.num button[aria-pressed="true"]{background:var(--neg);color:#fff;box-shadow:none}
+.dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700;flex:none;line-height:1}
+.dot.neg{background:var(--neg)} .dot.pos{background:var(--pos)} .dot.neu{background:#99A4AC}
+
+[hidden]{display:none!important}
+.views{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:999px;border:1px solid var(--line);margin-left:auto}
+.views button{font-family:'Jua','Noto Sans KR',sans-serif;font-size:18px;border:0;background:transparent;color:var(--muted);padding:6px 20px;min-height:46px;border-radius:999px;transition:background .2s,color .2s}
+.views button[aria-selected="true"]{background:var(--teal);color:#fff}
+.theory{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px 18px 18px}
+.tcard h2{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:21px;line-height:1.3;margin:0 0 12px;color:var(--teal-ink)}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.fig{background:var(--surface-2);border-radius:16px;padding:8px 10px 12px;text-align:center}
+.fig .mini{width:100%;max-width:210px;height:auto;display:block;margin:0 auto 4px}
+.fig b{display:block;font-size:15px;line-height:1.4}
+.fig p{margin:3px 0 0;font-size:14px;color:var(--muted);line-height:1.45}
+.key{margin:12px 0 0;padding:10px 14px;border-radius:14px;background:var(--teal-soft);font-weight:700;font-size:16px;line-height:1.5}
+.mini .s{font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.mini .cneg{fill:var(--neg)} .mini .cpos{fill:var(--pos)}
+/* SVG */
+.jar{fill:var(--glass-fill);stroke:var(--glass-stroke);stroke-width:2.5}
+.tray{fill:var(--tray)}
+.irod{stroke:var(--metal);stroke-width:7;stroke-linecap:round}
+.hinge{fill:var(--metal)}
+.plateSide{fill:var(--plate-side)} .plateTop{fill:var(--plate-top)}
+.sym{font-family:'Noto Sans KR',sans-serif;font-size:27px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.cneg{fill:var(--neg)} .cpos{fill:var(--pos)}
+.lbl line{stroke:var(--label);stroke-width:1.5}
+.lbl text{fill:var(--label);font-size:17px;font-weight:700;font-family:'Noto Sans KR',sans-serif}
+.ga{stroke:var(--go);stroke-width:4;fill:none;stroke-linecap:round}
+.ring{fill:none;stroke:var(--teal);stroke-width:3;transform-box:fill-box;transform-origin:center;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion: reduce){.ring{animation:none}}
+
+@media (max-width: 520px){
+  .views{margin-left:0;width:100%}
+  .views button{flex:1;font-size:16px;min-height:42px;padding:6px 8px}
+  .tcard{padding:14px 12px 14px}
+  .figs{grid-template-columns:repeat(2,1fr);gap:8px}
+  .fig p{font-size:13px}
+  body{font-size:16px}
+  .app{padding:8px 10px 10px}
+  .top{padding-bottom:8px}
+  h1{font-size:22px}
+  .pill{font-size:13px;min-height:38px;padding:4px 10px}
+  .hint{font-size:13px}
+  .controls{padding:8px 8px 10px}
+  .row{gap:6px}
+  .row > span{width:40px;font-size:13px}
+  .seg button{font-size:14px;gap:4px;padding:4px 2px;min-height:44px}
+  .dot{width:18px;height:18px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>검전기 가상 실험실</h1>
+    <nav class="views" role="tablist" aria-label="화면 고르기">
+      <button role="tab" data-view="lab" aria-selected="true">실험하기</button>
+      <button role="tab" data-view="theory" aria-selected="false">이론 확인하기</button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="stage-wrap">
+      <div class="stage-box">
+      <svg id="stage" viewBox="120 20 500 590" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="검전기 실험 화면. 화면을 끌면 막대가 움직여요.">
+        <defs>
+          <linearGradient id="glass" x1="0" x2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
+            <stop offset=".16" stop-color="#fff" stop-opacity=".06"/>
+            <stop offset=".82" stop-color="#fff" stop-opacity=".03"/>
+            <stop offset=".93" stop-color="#fff" stop-opacity=".32"/>
+            <stop offset="1" stop-color="#fff" stop-opacity=".08"/>
+          </linearGradient>
+          <linearGradient id="rod_neutral" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E6EAED"/><stop offset=".35" stop-color="#C3CACF"/><stop offset="1" stop-color="#8A949A"/>
+          </linearGradient>
+          <linearGradient id="rod_neg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#DAE6FC"/><stop offset=".35" stop-color="#9BB8EE"/><stop offset="1" stop-color="#4C74C4"/>
+          </linearGradient>
+          <linearGradient id="rod_pos" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FCE0DA"/><stop offset=".35" stop-color="#F0A395"/><stop offset="1" stop-color="#C45746"/>
+          </linearGradient>
+          <linearGradient id="metalG" x1="0" x2="1">
+            <stop offset="0" stop-color="#3E474E"/><stop offset=".45" stop-color="#8A949B"/><stop offset="1" stop-color="#3E474E"/>
+          </linearGradient>
+          <linearGradient id="leafG" x1="0" x2="1">
+            <stop offset="0" stop-color="#F5D883"/><stop offset=".5" stop-color="#D9A82E"/><stop offset="1" stop-color="#B08214"/>
+          </linearGradient>
+          <linearGradient id="capG" x1="0" x2="1">
+            <stop offset="0" stop-color="#0F5D6B"/><stop offset=".35" stop-color="#2A9AAC"/><stop offset="1" stop-color="#11697A"/>
+          </linearGradient>
+          <marker id="mg" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#2C9A57"/>
+          </marker>
+          <g id="pp">
+            <circle r="7" fill="#fff" opacity=".85"/>
+            <rect x="-5.2" y="-1.4" width="10.4" height="2.8" rx="1.1" fill="#E0402F"/>
+            <rect x="-1.4" y="-5.2" width="2.8" height="10.4" rx="1.1" fill="#E0402F"/>
+          </g>
+          <g id="el">
+            <circle r="6.8" fill="#2E6BE0" stroke="#fff" stroke-width="1.5"/>
+            <rect x="-3.9" y="-1.2" width="7.8" height="2.4" rx="1.2" fill="#fff"/>
+          </g>
+        </defs>
+
+        <ellipse cx="400" cy="572" rx="104" ry="14" class="tray"/>
+        <path d="M360 288 C310 302 292 340 292 390 L292 540 Q292 580 332 580 L468 580 Q508 580 508 540 L508 390 C508 340 490 302 440 288 Z" class="jar"/>
+        <line x1="400" y1="286" x2="400" y2="470" class="irod"/>
+        <g id="leafL"><rect x="397" y="468" width="6" height="84" rx="3" fill="url(#leafG)"/></g>
+        <g id="leafR"><rect x="397" y="468" width="6" height="84" rx="3" fill="url(#leafG)"/></g>
+        <circle cx="400" cy="470" r="5" class="hinge"/>
+        <g id="gArrow"></g>
+        <path d="M360 288 C310 302 292 340 292 390 L292 540 Q292 580 332 580 L468 580 Q508 580 508 540 L508 390 C508 340 490 302 440 288 Z" fill="url(#glass)" pointer-events="none"/>
+
+        <rect x="358" y="240" width="84" height="52" rx="10" fill="url(#capG)"/>
+        <rect x="372" y="224" width="56" height="20" rx="5" fill="url(#capG)"/>
+        <rect x="393" y="196" width="14" height="30" fill="url(#metalG)"/>
+        <ellipse cx="400" cy="198" rx="110" ry="13" class="plateSide"/>
+        <ellipse cx="400" cy="190" rx="110" ry="12" class="plateTop"/>
+
+        <g class="lbl">
+          <line x1="508" y1="200" x2="530" y2="218"/><text x="534" y="226">금속판</text>
+          <line x1="444" y1="540" x2="522" y2="540"/><text x="526" y="546">금속박</text>
+        </g>
+
+        <g id="gCharges"><g id="gPos"></g><g id="gEl"></g></g>
+
+        <g id="rod">
+          <circle id="hintRing" r="24" class="ring"/>
+          <g transform="rotate(45)">
+            <rect id="rodBody" x="-210" y="-12" width="210" height="24" rx="12" fill="url(#rod_neutral)"/>
+            <rect x="-198" y="-8" width="180" height="4" rx="2" fill="#fff" opacity=".5"/>
+          </g>
+          <g id="rodSigns"></g>
+        </g>
+      </svg>
+
+      <button class="pill" id="tgC" aria-pressed="true"><span class="sw"></span>전하 보기</button>
+      <div class="hint" id="hint">화면을 끌면 막대가 움직여요</div>
+      </div>
+      <div class="controls" id="panel" aria-label="실험 조작"></div>
+    </section>
+    <div class="theory" id="theory" hidden></div>
+  </main>
+</div>
+
+<script>
+(function(){
+const M = '\u2212';
+const SVGNS = 'http://www.w3.org/2000/svg';
+const CX = 400, PY = 190, PRX = 110, PVX = 400, PVY = 470, LEN = 84;
+const START = {x:180, y:70};
+const K = Math.SQRT1_2;
+const SPEED = 4.2;
+
+const S = { rod:'neutral', amount:2, tip:{...START}, Q:0, angle:4, arrowA:0, arrowDir:0, showC:true, dragged:false };
+const sgn = r => r === 'neg' ? -1 : r === 'pos' ? 1 : 0;
+const $ = id => document.getElementById(id);
+
+const svg = $('stage'), panel = $('panel');
+const gArrow = $('gArrow'), gPos = $('gPos'), gEl = $('gEl'), gCharges = $('gCharges');
+const rod = $('rod'), rodBody = $('rodBody'), rodSigns = $('rodSigns'), hintRing = $('hintRing');
+const leafL = $('leafL'), leafR = $('leafR'), hint = $('hint');
+
+/* ---------- conductor geometry: fixed (+) and slots for electrons ---------- */
+// plate (+): 5, stem (+): 6, each leaf (+): 2  → 15 positive charges total
+const POS_PLATE = [330,365,400,435,470].map(x => [x, 191]);
+const STEM_Y = [306,336,366,396,426,456];
+const POS_STEM = STEM_Y.map(y => [391, y]);
+const POS_LEAF_D = [38, 70];
+// electron slots in fill order
+const SLOT_P = [[330,176],[470,176],[365,176],[435,176],[400,176],[382,176],[417,176],[347,176],[452,176]];
+const SLOT_S = STEM_Y.map(y => [409, y]);
+const SLOT_LEAF_D = [22, 54, 38, 70, 84];
+const CAP = {P: SLOT_P.length, S: SLOT_S.length, L: SLOT_LEAF_D.length, R: SLOT_LEAF_D.length};
+const J1 = [409, 194], J2 = [409, 470];
+
+function leafPoint(side, d, off){
+  const r = S.angle * Math.PI / 180;
+  return [PVX + side*Math.sin(r)*d + side*Math.cos(r)*off, PVY + Math.cos(r)*d - Math.sin(r)*off];
+}
+function slotPos(reg, i){
+  if (reg === 'P') return SLOT_P[i];
+  if (reg === 'S') return SLOT_S[i];
+  return leafPoint(reg === 'L' ? -1 : 1, SLOT_LEAF_D[i], 8);
+}
+
+/* positive charges: created once */
+const posEls = [];
+function mkUse(id, parent){
+  const u = document.createElementNS(SVGNS, 'use');
+  u.setAttribute('href', '#' + id);
+  parent.appendChild(u);
+  return u;
+}
+POS_PLATE.concat(POS_STEM).forEach(p => posEls.push({el: mkUse('pp', gPos), fixed: p}));
+for (const side of [-1, 1]) for (const d of POS_LEAF_D) posEls.push({el: mkUse('pp', gPos), side, d});
+
+/* electrons */
+let E = [];
+function makeEl(reg, slot, x, y){
+  const e = {reg, slot, x, y, path: [], delay: 0, leaving: false, el: mkUse('el', gEl)};
+  E.push(e);
+  return e;
+}
+function resetElectrons(){
+  E.forEach(e => e.el.remove());
+  E = [];
+  for (let i = 0; i < 5; i++){ const p = SLOT_P[i]; makeEl('P', i, p[0], p[1]); }
+  for (let i = 0; i < 6; i++){ const p = SLOT_S[i]; makeEl('S', i, p[0], p[1]); }
+  for (const reg of ['L','R']) for (let i = 0; i < 2; i++){ const p = slotPos(reg, i); makeEl(reg, i, p[0], p[1]); }
+}
+const alive = () => E.filter(e => !e.leaving);
+const count = reg => E.filter(e => !e.leaving && e.reg === reg).length;
+function freeSlot(reg){
+  const used = new Set(E.filter(e => !e.leaving && e.reg === reg).map(e => e.slot));
+  for (let i = 0; i < CAP[reg]; i++) if (!used.has(i)) return i;
+  return -1;
+}
+function victim(reg){
+  let best = null;
+  for (const e of E) if (!e.leaving && e.reg === reg && (!best || e.slot > best.slot)) best = e;
+  return best;
+}
+function zone(e){ return e.y <= 205 ? 'P' : e.y >= 466 ? 'LEAF' : 'S'; }
+function route(e, dest){
+  const z = zone(e), pts = [];
+  if (dest === 'P'){
+    if (z === 'LEAF') pts.push(J2);
+    if (z !== 'P') pts.push(J1);
+  } else if (dest === 'OUT'){
+    if (z === 'LEAF') pts.push(J2);
+    if (z !== 'P') pts.push(J1);
+    pts.push([e.x < 400 ? 380 : 420, 70]);
+    return pts;
+  } else {
+    if (z === 'P') pts.push(J1);
+    if (z !== 'LEAF' || true) pts.push(J2);
+  }
+  pts.push('SLOT');
+  return pts;
+}
+
+let lastKey = '';
+function rebalance(tP, tL, tR){
+  const key = tP + ',' + tL + ',' + tR;
+  if (key === lastKey) return;
+  lastKey = key;
+  const want = {P: tP, L: tL, R: tR};
+  let delay = 0;
+  // total electron number (charging)
+  const totalWant = tP + tL + tR + 6;
+  while (alive().length < totalWant){
+    const reg = ['P','L','R'].find(r => count(r) < want[r]) || 'P';
+    const slot = freeSlot(reg); if (slot < 0) break;
+    const e = makeEl(reg, slot, 380 + Math.random()*40, 40);
+    e.path = reg === 'P' ? ['SLOT'] : [J1, J2, 'SLOT'];
+    e.delay = delay; delay += 7;
+  }
+  while (alive().length > totalWant){
+    const reg = ['P','L','R'].sort((a,b) => (count(b)-want[b]) - (count(a)-want[a]))[0];
+    const e = victim(reg); if (!e) break;
+    e.leaving = true; e.path = route(e, 'OUT'); e.delay = delay; delay += 7;
+  }
+  // move surplus → deficit
+  for (let guard = 0; guard < 40; guard++){
+    const from = ['P','L','R'].find(r => count(r) > want[r]);
+    const to = ['P','L','R'].find(r => count(r) < want[r]);
+    if (!from || !to) break;
+    const e = victim(from), slot = freeSlot(to);
+    if (!e || slot < 0) break;
+    e.reg = to; e.slot = slot; e.path = route(e, to); e.delay = delay; delay += 6;
+  }
+}
+
+function stepElectrons(){
+  for (const e of E){
+    if (e.delay > 0){ e.delay--; continue; }
+    let budget = SPEED;
+    while (e.path.length && budget > 0){
+      const t = e.path[0] === 'SLOT' ? slotPos(e.reg, e.slot) : e.path[0];
+      const dx = t[0] - e.x, dy = t[1] - e.y, d = Math.hypot(dx, dy);
+      if (d <= budget){ e.x = t[0]; e.y = t[1]; budget -= d; e.path.shift(); }
+      else { e.x += dx/d*budget; e.y += dy/d*budget; budget = 0; }
+    }
+    if (!e.path.length && !e.leaving){ const p = slotPos(e.reg, e.slot); e.x = p[0]; e.y = p[1]; }
+  }
+  E = E.filter(e => { if (e.leaving && !e.path.length){ e.el.remove(); return false; } return true; });
+}
+function drawCharges(){
+  for (const p of posEls){
+    const q = p.fixed || leafPoint(p.side, p.d, -7);
+    p.el.setAttribute('x', q[0].toFixed(1)); p.el.setAttribute('y', q[1].toFixed(1));
+  }
+  for (const e of E){
+    e.el.setAttribute('x', e.x.toFixed(1)); e.el.setAttribute('y', e.y.toFixed(1));
+    if (e.leaving) e.el.setAttribute('opacity', Math.max(0, Math.min(1, (e.y - 70) / 110)).toFixed(2));
+  }
+}
+
+/* ---------- rod ---------- */
+const PLATE_A = [CX - PRX, 194], PLATE_B = [CX + PRX, 194];
+const ROD_LEN = 210, CHG_LEN = 90, GAP = 31;
+function ptSeg(p, a, b){
+  const abx = b[0]-a[0], aby = b[1]-a[1];
+  const t = Math.max(0, Math.min(1, ((p[0]-a[0])*abx + (p[1]-a[1])*aby) / (abx*abx + aby*aby)));
+  return Math.hypot(p[0]-a[0]-abx*t, p[1]-a[1]-aby*t);
+}
+function crs(o, a, b){ return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]); }
+function segSeg(a, b, c, d){
+  if ((crs(c,d,a) > 0) !== (crs(c,d,b) > 0) && (crs(a,b,c) > 0) !== (crs(a,b,d) > 0)) return 0;
+  return Math.min(ptSeg(a,c,d), ptSeg(b,c,d), ptSeg(c,a,b), ptSeg(d,a,b));
+}
+// distance between the rod (from its tip, `len` units back along the rod) and the metal plate
+function rodDist(t, len){
+  return segSeg([t.x, t.y], [t.x - K*len, t.y - K*len], PLATE_A, PLATE_B);
+}
+function prox(t){
+  const d = rodDist(t, CHG_LEN);
+  let p = (170 - d) / (170 - 35);
+  p = Math.min(1, Math.max(0, p));
+  return Math.pow(p, 1.3);
+}
+function bounds(){
+  const r = svg.getBoundingClientRect(), inv = svg.getScreenCTM().inverse(), pt = svg.createSVGPoint();
+  pt.x = r.left; pt.y = r.top; const a = pt.matrixTransform(inv);
+  pt.x = r.right; pt.y = r.bottom; const b = pt.matrixTransform(inv);
+  return {x0: a.x + 18, y0: a.y + 18, x1: b.x - 18, y1: b.y - 18};
+}
+// move freely inside the screen, sliding around the plate so the rod never touches it
+function moveTip(nx, ny){
+  const B = bounds();
+  nx = Math.min(B.x1, Math.max(B.x0, nx));
+  ny = Math.min(B.y1, Math.max(B.y0, ny));
+  const ok = (x, y) => rodDist({x, y}, ROD_LEN) >= GAP;
+  const sx = S.tip.x, sy = S.tip.y;
+  let x = sx, y = sy;
+  const n = Math.max(1, Math.ceil(Math.hypot(nx - sx, ny - sy) / 5));
+  for (let i = 1; i <= n; i++){
+    const tx = sx + (nx - sx) * i / n, ty = sy + (ny - sy) * i / n;
+    if (ok(tx, ty)){ x = tx; y = ty; }
+    else if (ok(tx, y)) x = tx;
+    else if (ok(x, ty)) y = ty;
+  }
+  S.tip.x = x; S.tip.y = y;
+}
+let rodKey = null;
+function drawRod(){
+  rod.setAttribute('transform', `translate(${S.tip.x.toFixed(1)} ${S.tip.y.toFixed(1)})`);
+  const s = sgn(S.rod);
+  const n = s === 0 ? 0 : S.amount;
+  const key = S.rod + n + S.showC;
+  if (key === rodKey) return;
+  rodKey = key;
+  rodBody.setAttribute('fill', `url(#rod_${S.rod})`);
+  let h = '';
+  if (S.showC){
+    for (let i = 0; i < n; i++){
+      const u = -26 - Math.floor(i/2) * 26 - (i % 2 ? 13 : 0);
+      const v = (i % 2 ? -1 : 1) * 28;
+      const x = u*K - v*K, y = u*K + v*K;
+      h += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="sym ${s<0?'cneg':'cpos'}">${s<0?M:'+'}</text>`;
+    }
+  }
+  rodSigns.innerHTML = h;
+}
+function drawArrows(){
+  if (S.arrowA < 0.05){ if (gArrow.firstChild) gArrow.innerHTML = ''; return; }
+  const r = S.angle * Math.PI / 180, m = S.arrowDir;
+  let h = '';
+  for (const side of [-1, 1]){
+    const tx = PVX + side*Math.sin(r)*LEN, ty = PVY + Math.cos(r)*LEN;
+    const ox = side*Math.cos(r), oy = -Math.sin(r);
+    const bx = tx - ox*m*16, by = ty - oy*m*16 + 16;
+    const ex = tx + ox*m*16, ey = ty + oy*m*16 + 16;
+    const qx = (bx+ex)/2, qy = (by+ey)/2 + 10;
+    h += `<path d="M${bx.toFixed(1)} ${by.toFixed(1)} Q${qx.toFixed(1)} ${qy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}" class="ga" marker-end="url(#mg)"/>`;
+  }
+  gArrow.innerHTML = h;
+  gArrow.setAttribute('opacity', S.arrowA.toFixed(2));
+}
+
+/* ---------- loop ---------- */
+function frame(){
+  const p = prox(S.tip), s = sgn(S.rod);
+  const m = Math.round(-s * S.amount * p);           // electrons pushed from plate to leaves
+  const total = 9 - S.Q;                              // electrons on plate + leaves (stem keeps 6)
+  let eL = 4 - S.Q/2 + m;
+  eL = Math.max(Math.max(0, total - 9), Math.min(Math.min(10, total), eL));
+  const eP = total - eL;
+  rebalance(eP, Math.ceil(eL/2), Math.floor(eL/2));
+  stepElectrons();
+
+  // leaves respond to the electrons that are actually on them
+  const onLeaves = E.filter(e => !e.leaving && e.y >= 466).length;
+  const net = 4 - onLeaves;
+  const target = Math.max(4, Math.min(55, Math.abs(net) * 10));
+  const prev = S.angle;
+  S.angle += (target - S.angle) * 0.12;
+  if (Math.abs(target - S.angle) < 0.02) S.angle = target;
+  const v = S.angle - prev;
+  if (Math.abs(v) > 0.12){ S.arrowDir = Math.sign(v); S.arrowA = Math.min(1, S.arrowA + 0.25); }
+  else S.arrowA *= 0.93;
+
+  leafL.setAttribute('transform', `rotate(${S.angle.toFixed(2)} ${PVX} ${PVY})`);
+  leafR.setAttribute('transform', `rotate(${(-S.angle).toFixed(2)} ${PVX} ${PVY})`);
+  drawRod(); drawCharges(); drawArrows();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- panel ---------- */
+function render(){
+  panel.innerHTML = `
+    <div class="row"><span>막대</span><div class="seg">
+      <button data-act="rod" data-v="neutral"><span class="dot neu"></span>대전 안 됨</button>
+      <button data-act="rod" data-v="neg"><span class="dot neg">${M}</span>(${M}) 대전</button>
+      <button data-act="rod" data-v="pos"><span class="dot pos">+</span>(+) 대전</button>
+    </div></div>
+    <div class="row"><span>막대<br>전하량</span><div class="seg num" id="amtSeg">
+      ${[1,2,3,4,5].map(i => `<button data-act="amt" data-v="${i}" aria-label="막대의 전하량 ${i}단계">${i}</button>`).join('')}
+    </div></div>
+    <div class="row"><span>검전기</span><div class="seg">
+      <button data-act="charge" data-v="0"><span class="dot neu"></span>중성</button>
+      <button data-act="charge" data-v="-1"><span class="dot neg">${M}</span>(${M}) 대전</button>
+      <button data-act="charge" data-v="1"><span class="dot pos">+</span>(+) 대전</button>
+    </div></div>`;
+  refreshPanel();
+}
+function refreshPanel(){
+  panel.querySelectorAll('[data-act="rod"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.rod)));
+  panel.querySelectorAll('[data-act="amt"]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === S.amount)));
+  const as = document.getElementById('amtSeg'); if (as) as.classList.toggle('dis', S.rod === 'neutral');
+  panel.querySelectorAll('[data-act="charge"]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.v) * 4 === S.Q)));
+}
+
+/* ---------- input ---------- */
+function toSvg(e){
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  const q = toSvg(e);
+  drag = {dx: S.tip.x - q.x, dy: S.tip.y - q.y, id: e.pointerId};
+  try { svg.setPointerCapture(e.pointerId); } catch(_){}
+  svg.classList.add('grabbing');
+  markDragged();
+  e.preventDefault();
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const q = toSvg(e);
+  moveTip(q.x + drag.dx, q.y + drag.dy);
+});
+const endDrag = () => { drag = null; svg.classList.remove('grabbing'); };
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+svg.addEventListener('keydown', e => {
+  const st = 12, mv = {ArrowLeft:[-st,0], ArrowRight:[st,0], ArrowUp:[0,-st], ArrowDown:[0,st]}[e.key];
+  if (!mv) return;
+  moveTip(S.tip.x + mv[0], S.tip.y + mv[1]); markDragged(); e.preventDefault();
+});
+function markDragged(){
+  if (S.dragged) return;
+  S.dragged = true;
+  hint.classList.add('off');
+  hintRing.style.display = 'none';
+}
+
+panel.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act, v = b.dataset.v;
+  if (act === 'rod') S.rod = v;
+  else if (act === 'amt') S.amount = Number(v);
+  else if (act === 'charge') S.Q = Number(v) * 4;
+  refreshPanel();
+});
+const tgC = $('tgC');
+tgC.addEventListener('click', () => {
+  S.showC = !S.showC; tgC.setAttribute('aria-pressed', String(S.showC));
+  gCharges.style.display = S.showC ? '' : 'none';
+  rodKey = null;
+});
+
+
+/* ---------- theory view ---------- */
+function mini(o){
+  const A = (o.angle || 0) * Math.PI / 180, L = 46, PX = 140, PY2 = 190;
+  const sym = (x, y, sg) => `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="s ${sg<0?'cneg':'cpos'}">${sg<0?M:'+'}</text>`;
+  let h = `<svg viewBox="0 -18 240 280" class="mini" aria-hidden="true">`;
+  h += `<path d="M122 112 C102 118 94 134 94 154 L94 234 Q94 252 112 252 L168 252 Q186 252 186 234 L186 154 C186 134 178 118 158 112 Z" class="jar"/>`;
+  h += `<line x1="140" y1="112" x2="140" y2="190" stroke="var(--metal)" stroke-width="4"/>`;
+  for (const sd of [-1, 1]) h += `<line x1="140" y1="190" x2="${(PX+sd*Math.sin(A)*L).toFixed(1)}" y2="${(PY2+Math.cos(A)*L).toFixed(1)}" stroke="#D4A62A" stroke-width="4" stroke-linecap="round"/>`;
+  h += `<circle cx="140" cy="190" r="3.5" fill="var(--metal)"/>`;
+  h += `<rect x="137" y="62" width="6" height="26" fill="var(--metal)"/><rect x="129" y="84" width="22" height="10" rx="3" fill="var(--teal)"/><rect x="121" y="92" width="38" height="24" rx="5" fill="var(--teal)"/>`;
+  h += `<ellipse cx="140" cy="66" rx="52" ry="6" class="plateSide"/><ellipse cx="140" cy="62" rx="52" ry="6" class="plateTop"/>`;
+  if (o.plate){ const [sg, n] = o.plate; for (let i = 0; i < n; i++) h += sym(140 + (i - (n-1)/2) * 14, 48, sg); }
+  if (o.leaf){
+    const [sg, n] = o.leaf, per = [Math.ceil(n/2), Math.floor(n/2)];
+    [1, -1].forEach((sd, j) => { for (let i = 0; i < per[j]; i++){
+      const d = 16 + i * 13;
+      h += sym(PX + sd*Math.sin(A)*d + sd*Math.cos(A)*11, PY2 + Math.cos(A)*d - Math.sin(A)*11, sg);
+    }});
+  }
+  if (o.e){
+    const xs = o.eN === 2 ? [126, 154] : [154];
+    for (const x of xs){
+      const [ey, y1, y2] = o.e === 'down' ? [128, 140, 170] : [174, 162, 132];
+      const hd = o.e === 'down' ? -7 : 7;
+      h += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#E5483A" stroke-width="2.5"/><path d="M${x-4} ${y2+hd} L${x} ${y2} L${x+4} ${y2+hd} z" fill="#E5483A"/>`;
+      h += `<circle cx="${x}" cy="${ey}" r="6.5" fill="#2E6BE0" stroke="#fff" stroke-width="1.3"/><rect x="${x-3.6}" y="${ey-1.1}" width="7.2" height="2.2" rx="1" fill="#fff"/>`;
+    }
+  }
+  if (o.arrows){
+    for (const sd of [-1, 1]){
+      const tx = PX + sd*Math.sin(A)*L, ty = PY2 + Math.cos(A)*L + 9;
+      const dir = (o.arrows === 'out' ? sd : -sd);
+      const x0 = o.arrows === 'out' ? tx - dir*9 : tx + sd*20, x1 = o.arrows === 'out' ? tx + dir*9 : tx + sd*6;
+      h += `<path d="M${x0.toFixed(1)} ${ty.toFixed(1)} Q${tx.toFixed(1)} ${(ty+6).toFixed(1)} ${x1.toFixed(1)} ${ty.toFixed(1)}" stroke="#2C9A57" stroke-width="2.5" fill="none"/><path d="M${(x1-dir*6).toFixed(1)} ${(ty-4).toFixed(1)} L${x1.toFixed(1)} ${ty.toFixed(1)} L${(x1-dir*6).toFixed(1)} ${(ty+4).toFixed(1)} z" fill="#2C9A57"/>`;
+    }
+  }
+  if (o.rod){
+    const col = {neutral:'#B9C1C7', neg:'#86A6E4', pos:'#EE9C8D'}[o.rod];
+    const tx = 100, ty = 38;
+    h += `<line x1="${tx}" y1="${ty}" x2="${tx-60}" y2="${ty-60}" stroke="${col}" stroke-width="12" stroke-linecap="round"/>`;
+    const sg = sgn(o.rod), n = o.rodN || 0;
+    for (let i = 0; i < n; i++){
+      const u = 8 + Math.floor(i/2) * 13 + (i % 2 ? 6 : 0), side = i % 2 ? 1 : -1;
+      h += sym(tx - K*u + K*side*15, ty - K*u - K*side*15, sg);
+    }
+  }
+  return h + '</svg>';
+}
+const fig = (o, title, cap) => `<div class="fig">${mini(o)}<b>${title}</b><p>${cap}</p></div>`;
+$('theory').innerHTML = `
+<section class="tcard"><h2>물체의 대전 여부</h2><div class="figs">
+  ${fig({rod:'neutral', angle:3}, '대전되지 않은 물체', '금속박이 벌어지지 않아요.')}
+  ${fig({rod:'neg', rodN:4, plate:[1,4], leaf:[-1,4], angle:26, e:'down', arrows:'out'}, `(${M})로 대전된 물체`, '전자가 금속박 쪽으로 이동해 금속박이 벌어져요.')}
+  ${fig({rod:'pos', rodN:4, plate:[-1,4], leaf:[1,4], angle:26, e:'up', arrows:'out'}, '(+)로 대전된 물체', '전자가 금속판 쪽으로 이동해 금속박이 벌어져요.')}
+</div><p class="key">대전된 물체를 가까이 하면 금속박이 벌어져요. 금속박이 벌어지면 물체가 대전되어 있다는 것을 알 수 있어요.</p></section>
+
+<section class="tcard"><h2>물체에 대전된 전하의 양</h2><div class="figs">
+  ${fig({rod:'neg', rodN:2, plate:[1,2], leaf:[-1,2], angle:13, e:'down', arrows:'out'}, '전하의 양이 적을 때', '이동하는 전자가 적어 금속박이 조금 벌어져요.')}
+  ${fig({rod:'neg', rodN:6, plate:[1,6], leaf:[-1,6], angle:40, e:'down', eN:2, arrows:'out'}, '전하의 양이 많을 때', '이동하는 전자가 많아 금속박이 많이 벌어져요.')}
+</div><p class="key">물체에 대전된 전하의 양이 많을수록 금속박이 많이 벌어져요.</p></section>
+
+<section class="tcard"><h2>물체에 대전된 전하의 종류</h2><div class="figs">
+  ${fig({plate:[-1,2], leaf:[-1,2], angle:18}, `(${M})로 대전된 검전기`, '금속박이 (−)전하를 띠어 벌어져 있어요.')}
+  ${fig({rod:'neg', rodN:4, leaf:[-1,4], angle:36, e:'down', arrows:'out'}, `(${M}) 물체를 가까이 할 때`, '전자가 금속박으로 이동해 금속박이 더 벌어져요.')}
+  ${fig({rod:'pos', rodN:4, plate:[-1,4], angle:3, e:'up', arrows:'in'}, '(+) 물체를 가까이 할 때', '전자가 금속판으로 이동해 금속박이 오므라들어요.')}
+</div><p class="key">검전기와 같은 종류의 전하를 가까이 하면 금속박이 더 벌어지고, 다른 종류의 전하를 가까이 하면 금속박이 오므라들어요.</p></section>`;
+
+document.querySelectorAll('.views button').forEach(b => b.addEventListener('click', () => {
+  const v = b.dataset.view;
+  document.querySelectorAll('.views button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  document.querySelector('.stage-wrap').hidden = v !== 'lab';
+  $('theory').hidden = v !== 'theory';
+  if (v === 'theory') $('theory').scrollTop = 0;
+}));
+
+resetElectrons();
+render();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
