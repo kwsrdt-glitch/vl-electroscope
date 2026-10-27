@@ -63,7 +63,7 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 .pill[aria-pressed="true"] .sw{background:var(--teal)}
 #tgC{position:absolute;top:12px;right:12px}
 .hint{
-  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);pointer-events:none;
+  position:absolute;left:50%;top:14px;transform:translateX(-50%);pointer-events:none;
   background:var(--teal);color:#fff;font-weight:700;font-size:15px;padding:8px 16px;border-radius:999px;white-space:nowrap;
   transition:opacity .4s;
 }
@@ -114,6 +114,24 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 @keyframes pulse{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
 @media (prefers-reduced-motion: reduce){.ring{animation:none}}
 
+/* tablet landscape: controls move to a slim side column so the electroscope gets the full height */
+@media (orientation: landscape) and (min-width: 700px){
+  .stage-wrap{flex-direction:row}
+  .controls{flex:none;width:320px;border-top:0;border-left:1px solid var(--line);justify-content:center;align-items:stretch;padding:16px;gap:16px;overflow-y:auto}
+  .row{flex-direction:column;align-items:stretch;gap:6px;max-width:none}
+  .row > span{width:auto;font-size:13px;padding-left:4px}
+  .row > span br{display:none}
+  .seg button{min-height:44px;font-size:14px;gap:4px;padding:4px 3px}
+  .seg.num button{font-size:18px}
+  .dot{width:18px;height:18px;font-size:13px}
+}
+@media (orientation: landscape) and (max-height: 800px){
+  .app{padding:8px 14px 12px}
+  .top{padding:0 2px 8px}
+  h1{font-size:22px}
+  .views button{min-height:40px;font-size:16px;padding:4px 16px}
+  .pill{min-height:40px;font-size:14px}
+}
 @media (max-width: 520px){
   .views{margin-left:0;width:100%}
   .views button{flex:1;font-size:16px;min-height:42px;padding:6px 8px}
@@ -501,7 +519,7 @@ function render(){
       <button data-act="rod" data-v="neg"><span class="dot neg">${M}</span>(${M}) 대전</button>
       <button data-act="rod" data-v="pos"><span class="dot pos">+</span>(+) 대전</button>
     </div></div>
-    <div class="row"><span>막대<br>전하량</span><div class="seg num" id="amtSeg">
+    <div class="row"><span>막대 <br>전하량</span><div class="seg num" id="amtSeg">
       ${[1,2,3,4,5].map(i => `<button data-act="amt" data-v="${i}" aria-label="막대의 전하량 ${i}단계">${i}</button>`).join('')}
     </div></div>
     <div class="row"><span>검전기</span><div class="seg">
