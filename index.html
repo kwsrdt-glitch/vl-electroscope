@@ -50,7 +50,7 @@ button:focus-visible,#stage:focus-visible{outline:3px solid var(--teal);outline-
 h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;line-height:1.2;margin:0;color:var(--teal-ink)}
 
 .main{flex:1;min-height:0;display:flex}
-.stage-wrap{flex:1;display:flex;flex-direction:column;background:var(--surface);border-radius:26px;border:1px solid var(--line);overflow:hidden;min-height:0}
+.stage-wrap{position:relative;flex:1;display:flex;flex-direction:column;background:var(--surface);border-radius:26px;border:1px solid var(--line);overflow:hidden;min-height:0}
 .stage-box{position:relative;flex:1;min-height:0}
 #stage{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
 #stage.grabbing{cursor:grabbing}
@@ -61,8 +61,8 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 .pill[aria-pressed="true"]{border-color:var(--teal);color:var(--teal-ink);background:var(--teal-soft)}
 .pill .sw{width:10px;height:10px;border-radius:50%;background:var(--line)}
 .pill[aria-pressed="true"] .sw{background:var(--teal)}
-#tgC{position:absolute;top:12px;right:12px}
-#fsBtn{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;padding:0;opacity:.85}
+.tools{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px}
+#fsBtn{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;padding:0}
 #fsBtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 #fsBtn .ic-exit{display:none}
 #fsBtn.on .ic-exit{display:block} #fsBtn.on .ic-enter{display:none}
@@ -103,6 +103,10 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 .key{margin:12px 0 0;padding:10px 14px;border-radius:14px;background:var(--teal-soft);font-weight:700;font-size:16px;line-height:1.5}
 .mini .s{font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central}
 .mini .cneg{fill:var(--neg)} .mini .cpos{fill:var(--pos)}
+.qrm{position:fixed;inset:0;z-index:50;background:rgba(8,22,29,.6);display:grid;place-items:center;padding:16px}
+.qrc{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px 18px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%}
+.qrc svg{display:block;width:min(560px,calc(100vw - 72px),calc(100vh - 160px));height:auto;border-radius:12px}
+.qrc p{margin:0;font-size:13px;color:var(--muted);word-break:break-all;text-align:center;max-width:min(560px,calc(100vw - 72px))}
 /* SVG */
 .jar{fill:var(--glass-fill);stroke:var(--glass-stroke);stroke-width:2.5}
 .tray{fill:var(--tray)}
@@ -118,11 +122,10 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 @keyframes pulse{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
 @media (prefers-reduced-motion: reduce){.ring{animation:none}}
 
-/* tablet landscape: controls move to a slim side column so the electroscope gets the full height */
+/* tablet landscape: the scene fills the whole card; controls float in the bottom-right corner */
 @media (orientation: landscape) and (min-width: 700px){
-  .stage-wrap{flex-direction:row}
-  .controls{flex:none;width:320px;border-top:0;border-left:1px solid var(--line);justify-content:center;align-items:stretch;padding:16px;gap:16px;overflow-y:auto}
-  .row{flex-direction:column;align-items:stretch;gap:6px;max-width:none}
+  .controls{position:absolute;right:12px;bottom:12px;width:300px;border:1px solid var(--line);border-radius:20px;padding:12px;gap:10px;align-items:stretch;background:var(--surface);background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .row{flex-direction:column;align-items:stretch;gap:4px;max-width:none}
   .row > span{width:auto;font-size:13px;padding-left:4px}
   .row > span br{display:none}
   .seg button{min-height:44px;font-size:14px;gap:4px;padding:4px 3px}
@@ -135,6 +138,9 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
   h1{font-size:22px}
   .views button{min-height:40px;font-size:16px;padding:4px 16px}
   .pill{min-height:40px;font-size:14px}
+  .controls{padding:8px 10px 10px;gap:6px}
+  .row{gap:2px}
+  .row > span{font-size:12px;line-height:1.2}
 }
 @media (max-width: 520px){
   .views{margin-left:0;width:100%}
@@ -147,7 +153,7 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
   .top{padding-bottom:8px}
   h1{font-size:22px}
   .pill{font-size:13px;min-height:38px;padding:4px 10px}
-  .hint{font-size:13px}
+  .hint{font-size:13px;top:auto;bottom:10px}
   .controls{padding:8px 8px 10px}
   .row{gap:6px}
   .row > span{width:40px;font-size:13px}
@@ -169,7 +175,7 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
   <main class="main">
     <section class="stage-wrap">
       <div class="stage-box">
-      <svg id="stage" viewBox="120 20 500 590" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="검전기 실험 화면. 화면을 끌면 막대가 움직여요.">
+      <svg id="stage" viewBox="120 50 500 550" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="검전기 실험 화면. 화면을 끌면 막대가 움직여요.">
         <defs>
           <linearGradient id="glass" x1="0" x2="1">
             <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
@@ -242,17 +248,23 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
         </g>
       </svg>
 
-      <button class="pill" id="tgC" aria-pressed="true"><span class="sw"></span>전하 보기</button>
-      <button id="fsBtn" aria-label="전체 화면" hidden>
+      <div class="tools">
+        <button class="pill" id="qrBtn">QR 코드</button>
+        <button id="fsBtn" aria-label="전체 화면" hidden>
         <svg class="ic-enter" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
         <svg class="ic-exit" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
       </button>
+        <button class="pill" id="tgC" aria-pressed="true"><span class="sw"></span>전하 보기</button>
+      </div>
       <div class="hint" id="hint">화면을 끌면 막대가 움직여요</div>
       </div>
       <div class="controls" id="panel" aria-label="실험 조작"></div>
     </section>
     <div class="theory" id="theory" hidden></div>
   </main>
+  <div class="qrm" id="qrm" hidden role="dialog" aria-modal="true" aria-label="QR 코드">
+    <div class="qrc"><div id="qrBox"></div><p id="qrUrl"></p><button class="pill" id="qrClose">닫기</button></div>
+  </div>
 </div>
 
 <script>
@@ -260,7 +272,7 @@ h1{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400;font-size:28px;li
 const M = '\u2212';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const CX = 400, PY = 190, PRX = 110, PVX = 400, PVY = 470, LEN = 84;
-const START = {x:180, y:70};
+const START = {x:180, y:84};
 const K = Math.SQRT1_2;
 const SPEED = 4.2;
 
@@ -670,6 +682,132 @@ document.querySelectorAll('.views button').forEach(b => b.addEventListener('clic
   $('theory').hidden = v !== 'theory';
   if (v === 'theory') $('theory').scrollTop = 0;
 }));
+
+/* ---------- QR code (self-contained encoder: byte mode, error correction M, versions 1-10) ---------- */
+function qrMake(text){
+  const EC = [0,10,16,26,18,24,16,18,22,22,26], NB = [0,1,1,1,2,2,4,4,4,5,5];
+  const bytes = Array.from(new TextEncoder().encode(text));
+  const raw = v => { let r = (16*v+128)*v+64; if (v >= 2){ const a = Math.floor(v/7)+2; r -= (25*a-10)*a-55; if (v >= 7) r -= 36; } return r; };
+  const dataCap = v => Math.floor(raw(v)/8) - EC[v]*NB[v];
+  let ver = 1;
+  while (ver <= 10 && 4 + (ver < 10 ? 8 : 16) + 8*bytes.length > dataCap(ver)*8) ver++;
+  if (ver > 10) return null;
+  // bit stream
+  const bits = [];
+  const put = (val, n) => { for (let i = n-1; i >= 0; i--) bits.push((val >>> i) & 1); };
+  put(4, 4); put(bytes.length, ver < 10 ? 8 : 16); bytes.forEach(b => put(b, 8));
+  const cap = dataCap(ver) * 8;
+  put(0, Math.min(4, cap - bits.length));
+  while (bits.length % 8) bits.push(0);
+  for (let pad = 0xEC; bits.length < cap; pad ^= 0xEC ^ 0x11) put(pad, 8);
+  const data = [];
+  for (let i = 0; i < bits.length; i += 8){ let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i+j]; data.push(b); }
+  // Reed-Solomon
+  const mul = (x, y) => { let z = 0; for (let i = 7; i >= 0; i--){ z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z; };
+  const div = n => { const r = new Array(n-1).fill(0).concat([1]); let root = 1;
+    for (let i = 0; i < n; i++){ for (let j = 0; j < r.length; j++){ r[j] = mul(r[j], root); if (j+1 < r.length) r[j] ^= r[j+1]; } root = mul(root, 2); } return r; };
+  const rem = (d, dv) => { const r = dv.map(() => 0); for (const b of d){ const f = b ^ r.shift(); r.push(0); dv.forEach((c, i) => { r[i] ^= mul(c, f); }); } return r; };
+  const nb = NB[ver], el = EC[ver], rc = Math.floor(raw(ver)/8), ns = nb - rc % nb, sl = Math.floor(rc/nb), dv = div(el);
+  const blocks = []; let k = 0;
+  for (let i = 0; i < nb; i++){
+    const d = data.slice(k, k + sl - el + (i < ns ? 0 : 1)); k += d.length;
+    const e = rem(d, dv); if (i < ns) d.push(0); blocks.push(d.concat(e));
+  }
+  const cw = [];
+  for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => { if (i !== sl - el || j >= ns) cw.push(b[i]); });
+  // matrix
+  const N = ver*4 + 17;
+  const m = Array.from({length:N}, () => new Array(N).fill(false));
+  const fn = Array.from({length:N}, () => new Array(N).fill(false));
+  const setF = (x, y, d) => { m[y][x] = d; fn[y][x] = true; };
+  for (let i = 0; i < N; i++){ setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+  const finder = (cx, cy) => { for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++){
+    const x = cx+dx, y = cy+dy; if (x >= 0 && x < N && y >= 0 && y < N) setF(x, y, Math.max(Math.abs(dx), Math.abs(dy)) !== 2 && Math.max(Math.abs(dx), Math.abs(dy)) !== 4); } };
+  finder(3, 3); finder(N-4, 3); finder(3, N-4);
+  const na = ver === 1 ? 0 : Math.floor(ver/7) + 2;
+  if (na){
+    const step = Math.ceil((ver*4+4)/(na*2-2))*2, pos = [6];
+    for (let p = N-7; pos.length < na; p -= step) pos.splice(1, 0, p);
+    for (let i = 0; i < na; i++) for (let j = 0; j < na; j++){
+      if ((i === 0 && j === 0) || (i === 0 && j === na-1) || (i === na-1 && j === 0)) continue;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) setF(pos[i]+dx, pos[j]+dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }
+  }
+  const fmt = mask => {
+    const d = (0 << 3) | mask; let r = d;
+    for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+    const b = ((d << 10) | r) ^ 0x5412, g = i => ((b >>> i) & 1) !== 0;
+    for (let i = 0; i <= 5; i++) setF(8, i, g(i));
+    setF(8, 7, g(6)); setF(8, 8, g(7)); setF(7, 8, g(8));
+    for (let i = 9; i < 15; i++) setF(14 - i, 8, g(i));
+    for (let i = 0; i < 8; i++) setF(N-1-i, 8, g(i));
+    for (let i = 8; i < 15; i++) setF(8, N-15+i, g(i));
+    setF(8, N-8, true);
+  };
+  fmt(0);
+  if (ver >= 7){
+    let r = ver; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25);
+    const b = (ver << 12) | r;
+    for (let i = 0; i < 18; i++){ const c = ((b >>> i) & 1) !== 0, a = N-11 + i % 3, q = Math.floor(i/3); setF(a, q, c); setF(q, a, c); }
+  }
+  let bi = 0;
+  for (let right = N-1; right >= 1; right -= 2){
+    if (right === 6) right = 5;
+    for (let vert = 0; vert < N; vert++) for (let j = 0; j < 2; j++){
+      const x = right - j, y = (((right + 1) & 2) === 0) ? N-1-vert : vert;
+      if (!fn[y][x] && bi < cw.length*8){ m[y][x] = ((cw[bi >>> 3] >>> (7 - (bi & 7))) & 1) !== 0; bi++; }
+    }
+  }
+  const inv = (mask, x, y) => [(x+y)%2===0, y%2===0, x%3===0, (x+y)%3===0, (Math.floor(x/3)+Math.floor(y/2))%2===0,
+    x*y%2 + x*y%3 === 0, (x*y%2 + x*y%3)%2 === 0, ((x+y)%2 + x*y%3)%2 === 0][mask];
+  const apply = mask => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!fn[y][x] && inv(mask, x, y)) m[y][x] = !m[y][x]; };
+  const penalty = () => {
+    let p = 0, dark = 0;
+    for (let y = 0; y < N; y++){
+      let run = 1;
+      for (let x = 1; x < N; x++){ if (m[y][x] === m[y][x-1]) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; }
+    }
+    for (let x = 0; x < N; x++){
+      let run = 1;
+      for (let y = 1; y < N; y++){ if (m[y][x] === m[y-1][x]) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; }
+    }
+    for (let y = 0; y < N-1; y++) for (let x = 0; x < N-1; x++) if (m[y][x] === m[y][x+1] && m[y][x] === m[y+1][x] && m[y][x] === m[y+1][x+1]) p += 3;
+    for (const r of m) for (const c of r) if (c) dark++;
+    p += Math.floor(Math.abs(dark*20 - N*N*10) / (N*N)) * 10;
+    return p;
+  };
+  let best = 0, bp = Infinity;
+  for (let mk = 0; mk < 8; mk++){ apply(mk); fmt(mk); const p = penalty(); if (p < bp){ bp = p; best = mk; } apply(mk); }
+  apply(best); fmt(best);
+  return m;
+}
+function qrSvg(text){
+  const m = qrMake(text); if (!m) return '';
+  const N = m.length, q = 4; let d = '';
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (m[y][x]) d += `M${x+q} ${y+q}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${N+q*2} ${N+q*2}" shape-rendering="crispEdges" role="img" aria-label="이 페이지로 연결되는 QR 코드"><rect width="${N+q*2}" height="${N+q*2}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+(function(){
+  const box = $('qrm'), btn = $('qrBtn');
+  const close = () => { box.hidden = true; btn.focus(); };
+  btn.addEventListener('click', () => {
+    const url = location.href.split('#')[0];
+    $('qrBox').innerHTML = qrSvg(url);
+    $('qrUrl').textContent = /^https?:/.test(url) ? url.replace(/^https?:\/\//, '') : '';
+    box.hidden = false; $('qrClose').focus();
+  });
+  $('qrClose').addEventListener('click', close);
+  box.addEventListener('click', e => { if (e.target === box) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden) close(); });
+})();
+
+/* wide screens: leave room on the right for the floating controls */
+(function(){
+  const mq = matchMedia('(orientation: landscape) and (min-width: 700px)');
+  const set = () => svg.setAttribute('viewBox', mq.matches ? '120 50 640 550' : '120 50 500 550');
+  set();
+  if (mq.addEventListener) mq.addEventListener('change', set); else mq.addListener(set);
+})();
 
 /* ---------- fullscreen ---------- */
 (function(){
